@@ -27,7 +27,8 @@ def main():
     # extract a client side object
     client_side_obj = sample_obj.get_GeoJSON()
     
-    # 
+    # write out csv
+    sample_obj.write_to_csv('test.csv') 
 
     pass
     

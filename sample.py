@@ -1,3 +1,6 @@
+# Author: Ryan Hamilton
+
+
 import ee
 import os
 import csv
