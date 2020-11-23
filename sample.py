@@ -1,4 +1,6 @@
 import ee
+import os
+import csv
 import json
 
 from ee.ee_exception import EEException
@@ -65,7 +67,17 @@ class SampleRegions(Sample):
                 'properties': None
             } )
 
-    def get_GeoJSON(self):
+    def get_GeoJSON(self) -> dict:
+        
+        """Used to take a earth engine server side object and convert it to a client side object.
+         
+
+        Raises:
+            Exception: If the sample is empty will throw an error
+
+        Returns:
+            dict: python representation of a json file 
+        """        
         
         if self._sample is None:
             raise Exception("The Sample Is Empty")
@@ -83,6 +95,14 @@ class SampleRegions(Sample):
             return geojson
     
     def get_GeoJson_Large_FC(self, split_property:str) -> dict:
+        """Used to extract large sample point collections from earth engine api. Has a simialr purpose as get_GeoJSON method 
+        The way it works is it takes split the feature collection intally by the field you want to split it on. It then attemps to 
+        convert the ee objects into client side objects. 
+
+        Args:
+            split_property (str): the prpoerty we want tinfo = eeFeatCol.getInfo()
+        """                
+        
         export = []
 
         labels = self._col.aggregate_array(split_property).distinct().getInfo()
@@ -119,3 +139,27 @@ class SampleRegions(Sample):
         """        
         
         return self._sample 
+
+    def write_to_csv(self, fname:str, path='./'):
+        """This only works for sampels that have 5000 or less features cumlative in the 
+        feature collection
+
+        Args:
+            fname (str): [description]
+        """                
+        
+        if self._sample.size().getInfo() > 5000:
+            raise EEException('Collection is to big... Exiting')
+        
+        
+        data = self._sample.getInfo().get('features')
+        rows = [i.get('properties') for i in data]
+        
+        header = list(rows[0].keys())
+        
+        with open(os.path.join(path, fname)) as csv_file:
+            writer = csv.DictWriter(csv_file, fieldnames=header)
+            writer.writeheader()
+            writer.writerows()
+            csv_file.close()
+            
